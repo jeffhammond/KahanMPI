@@ -9,11 +9,8 @@ lib_LTLIBRARIES = libkahanmpi.la
 
 noinst_LTLIBRARIES = libkahanmpii.la
 
-libkahanmpi_la_SOURCES = 	src/coll.c \
-							src/vcoll.c \
-							src/ncoll.c \
-							src/starttestwait.c \
-							src/utils.c
+libkahanmpi_la_SOURCES = src/coll.c \
+			 src/utils.c
 
 libkahanmpi_la_LDFLAGS = -version-info $(libkahanmpi_abi_version)
 
