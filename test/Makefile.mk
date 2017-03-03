@@ -3,12 +3,15 @@
 #
 
 check_PROGRAMS += test/test_assert \
-				  # end
+		  test/test_integer_passthrough \
+                  # end
 
 TESTS += test/test_assert \
-     	 # end
+         test/test_integer_passthrough \
+         # end
 
 XFAIL_TESTS += test/test_assert \
-			   # end
+               test/test_integer_passthrough \
+               # end
 
 test_test_assert_LDADD = libkahanmpi.la
