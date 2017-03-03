@@ -2,10 +2,10 @@
 # related Q&A on StackOverflow to get C++11 working.
 
 CC       = clang
-CCFLAGS  = -g -O2 -std=c11
+CCFLAGS  = -g -O2 -std=c11 -DDEBUG=$(DEBUG)
 
 CXX      = clang++
-CXXFLAGS = -g -O2 -std=c++11 -stdlib=libc++
+CXXFLAGS = -g -O2 -std=c++11 -stdlib=libc++ -DDEBUG=$(DEBUG)
 CXXLIBS  = -nodefaultlibs -lc++ -lc++abi -lm -lc
 
 LD       = $(CC)

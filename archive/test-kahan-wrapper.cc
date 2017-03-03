@@ -7,6 +7,8 @@
 #include <new>      /* declares new[]   */
 #include <mpi.h>
 
+#include "kahan.h"
+
 #define MPIX_KAHAN_SUM (MPI_Op)0x99999999
 
 int main(int argc, char * argv[])

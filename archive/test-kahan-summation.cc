@@ -16,10 +16,10 @@ int main(int argc, char * argv[])
     double * buf2 = new double[n];
 
     for (size_t i=0; i<n; ++i)
-        buf1[i] = ldexp(1.0, i%64 - 32);
+        buf1[i] = ldexp(1.0, i%128 - 64);
     for (size_t i=0; i<n; ++i)
         buf2[i] = buf1[n-i-1];
-#ifdef DEBUG
+#if DEBUG
     for (size_t i=0; i<n; ++i)
         printf("buf1[%d] = %40.20lf buf2[%d] = %40.20lf \n", i, buf1[i], i, buf2[i] );
 #endif
