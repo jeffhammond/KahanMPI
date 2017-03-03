@@ -1,5 +1,15 @@
 #include <stdbool.h>
 
+#include <mpi.h>
+
+static inline bool kahanmpi_type_op_supported(MPI_Datatype type, MPI_Op op)
+{
+    if (op == MPI_SUM) {
+        if (type == MPI_FLOAT) return true;
+    }
+    return false;
+}
+
 int KahanMPI_Reduce_local(const void *inbuf, void *inoutbuf, int count,
                           MPI_Datatype datatype, MPI_Op op);
 int KahanMPI_Reduce(const void *sendbuf, void *recvbuf, int count,
