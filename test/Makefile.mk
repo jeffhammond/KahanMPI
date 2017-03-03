@@ -11,7 +11,6 @@ TESTS += test/test_assert \
          # end
 
 XFAIL_TESTS += test/test_assert \
-               test/test_integer_passthrough \
                # end
 
 test_test_assert_LDADD = libkahanmpi.la
