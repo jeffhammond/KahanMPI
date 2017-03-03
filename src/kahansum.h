@@ -1,7 +1,17 @@
-/* Adapted from http://en.wikipedia.org/wiki/Kahan_summation_algorithm */
-
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+
+float BasicSumFloat(int n, float * input)
+{
+    float sum = 0.0f;
+    for (int i=0; i<n; ++i) {
+        sum += input[i];
+    }
+    return sum;
+}
+
+/* Adapted from http://en.wikipedia.org/wiki/Kahan_summation_algorithm */
 
 static inline float KahanSumFloat(int n, float * input)
 {
@@ -16,7 +26,7 @@ static inline float KahanSumFloat(int n, float * input)
     return sum;
 }
 
-static inline float KahanSumFloatStrided(int n, float * input, int stride)
+static inline float KahanSumStridedFloat(int n, float * input, int stride)
 {
     float sum = 0.0f;
     float c   = 0.0f;                // A running compensation for lost low-order bits.
@@ -29,7 +39,16 @@ static inline float KahanSumFloatStrided(int n, float * input, int stride)
     return sum;
 }
 
-static inline void KahanFloatWrapper(int commsize, int count, float * tempbuf, float * result)
+static inline void KahanTransposeFloat(int commsize, int count, const float * restrict in, float * restrict out)
+{
+    for (int j=0; j<count; ++j) {
+        for (int i=0; i<commsize; ++i) {
+            out[i+commsize*j] = in[i*commsize+j];
+        }
+    }
+}
+
+static inline void KahanWrapperFloat(int commsize, int count, float * tempbuf, float * result)
 {
         /* The Kahan algorithm reduces a contiguous vector to a scalar.
          * Since we do not get a contiguous vector from (all)gather
@@ -40,17 +59,31 @@ static inline void KahanFloatWrapper(int commsize, int count, float * tempbuf, f
          * (3) modify KahanSum to work with stride>1.
          * We currently do 2. */
 
-        float * kahanbuf = malloc(commsize*sizeof(float));
-        assert(kahanbuf!=NULL);
+#if 0
+        float * tempbuf = malloc(commsize*sizeof(float));
+        assert(tempbuf!=NULL);
 
         for (int j=0; j<count; ++j) {
             for (int i=0; i<commsize; ++i) {
-                kahanbuf[i] = tempbuf[i*commsize+j];
+                tempbuf[i] = tempbuf[i*commsize+j];
             }
-            result[j] = KahanSumFloat(commsize, kahanbuf);
+            result[j] = KahanSumFloat(commsize, tempbuf);
+            //result[j] = BasicSumFloat(commsize, tempbuf);
         }
 
-        free(kahanbuf);
-
+        free(tempbuf);
+#elif 0
+        for (int j=0; j<count; ++j) {
+            result[j] = KahanSumStridedFloat(commsize, tempbuf, count);
+        }
+        printf("hi\n");
+#else
+        float * transpose = malloc(commsize * count * sizeof(float));
+        KahanTransposeFloat(commsize, count, tempbuf, transpose);
+        for (int j=0; j<count; ++j) {
+            result[j] = KahanSumFloat(commsize, &(transpose[j]) );
+        }
+        free(transpose);
+#endif
         return;
 }

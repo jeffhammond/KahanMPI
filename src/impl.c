@@ -1,8 +1,17 @@
-#include <mpi.h>
+#ifdef __INTEL_COMPILER
+#pragma float_control (precise, on)
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <math.h>
 
+#include <mpi.h>
+
 #include "kahanmpi.h"
-#include "kahansum.h"
+//#include "kahansum.h"
 
 int KahanMPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
 {
@@ -23,8 +32,6 @@ int KahanMPI_Reduce(const void *sendbuf, void *recvbuf, int count,
     rc = MPI_Comm_size(comm, &commsize);
     if (rc != MPI_SUCCESS) return rc;
 
-    MPI_Aint bytes = (MPI_Aint)typesize * (MPI_Aint)count * (MPI_Aint)commsize;
-
     int commrank = 0;
     rc = MPI_Comm_rank(comm, &commrank);
     if (rc != MPI_SUCCESS) return rc;
@@ -32,21 +39,45 @@ int KahanMPI_Reduce(const void *sendbuf, void *recvbuf, int count,
     if (datatype == MPI_FLOAT) {
 
         /* only used at root */
-        float * temp;
+        float * gatherbuf;
+        float * reducebuf;
 
         /* allocate buffer for summation only at root */
         if (commrank==abs(root)) {
-            rc = MPI_Alloc_mem(bytes, MPI_INFO_NULL, &temp);
+            MPI_Aint bytes;
+
+            bytes = (MPI_Aint)typesize * (MPI_Aint)count * (MPI_Aint)commsize;
+            rc = MPI_Alloc_mem(bytes, MPI_INFO_NULL, &gatherbuf);
+            if (rc != MPI_SUCCESS) return rc;
+
+            bytes = (MPI_Aint)typesize * (MPI_Aint)count;
+            rc = MPI_Alloc_mem(bytes, MPI_INFO_NULL, &reducebuf);
             if (rc != MPI_SUCCESS) return rc;
         }
 
         /* gather all inputs to root */
-        rc = MPI_Gather(sendbuf, count, datatype, temp, count, datatype, abs(root), comm);
+        rc = MPI_Gather(sendbuf, count, datatype, gatherbuf, count, datatype, abs(root), comm);
         if (rc != MPI_SUCCESS) return rc;
 
         /* perform summation only at root */
         if (commrank==abs(root)) {
-            KahanFloatWrapper(commsize, count, temp, recvbuf);
+            fflush(stdout);
+            for (int j=0; j<count; ++j) {
+                float sum = 0.0f;
+                float low = 0.0f;
+                for (int i=0; i<commsize; ++i) {
+                    int index = j+i*count;
+                    /* simple summation:
+                     * sum += gatherbuf[index]; */
+                    float y = gatherbuf[index] - low;
+                    float t = sum + y;
+                    low = (t - sum) - y;
+                    sum = t;
+                }
+                reducebuf[j] = sum;
+            }
+            //fflush(stdout);
+            memcpy(recvbuf, reducebuf, count * sizeof(float) );
         }
 
         /* bcast to achieve allreduce semantic */
@@ -57,7 +88,10 @@ int KahanMPI_Reduce(const void *sendbuf, void *recvbuf, int count,
 
         /* free buffer for summation only at root */
         if (commrank==abs(root)) {
-            rc = MPI_Free_mem(temp);
+            rc = MPI_Free_mem(gatherbuf);
+            if (rc != MPI_SUCCESS) return rc;
+
+            rc = MPI_Free_mem(reducebuf);
             if (rc != MPI_SUCCESS) return rc;
         }
 

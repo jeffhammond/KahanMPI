@@ -46,6 +46,7 @@ void KahanWrapper(int commsize, int count, float * tempbuf, float * result)
          * (3) modify KahanSum to work with stride>1.
          * We currently do 2. */
 
+#if 0
         float * kahanbuf = malloc(commsize*sizeof(float));
         assert(kahanbuf!=NULL);
 
@@ -54,9 +55,15 @@ void KahanWrapper(int commsize, int count, float * tempbuf, float * result)
                 kahanbuf[i] = tempbuf[i*commsize+j];
             }
             result[j] = KahanSum(commsize, kahanbuf);
+            //result[j] = BasicSum(commsize, kahanbuf);
         }
 
         free(kahanbuf);
-
+#else
+        for (int j=0; j<count; ++j) {
+            result[j] = KahanSumStrided(commsize, kahanbuf, count);
+        }
+        printf("hi\n");
+#endif
         return;
 }
