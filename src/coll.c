@@ -2,14 +2,6 @@
 
 #include "kahanmpi.h"
 
-int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
-{
-    if (kahanmpi_type_op_supported(datatype, op)) {
-        return KahanMPI_Reduce_local(inbuf, inoutbuf, count, datatype, op);
-    }
-    return PMPI_Reduce_local(inbuf, inoutbuf, count, datatype, op);
-}
-
 int MPI_Reduce(const void *sendbuf, void *recvbuf, int count,
                MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm)
 {
@@ -26,6 +18,15 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
         return KahanMPI_Reduce(sendbuf, recvbuf, count, datatype, op, -1, comm);
     }
     return PMPI_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
+}
+
+#if 0
+int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
+{
+    if (kahanmpi_type_op_supported(datatype, op)) {
+        return KahanMPI_Reduce_local(inbuf, inoutbuf, count, datatype, op);
+    }
+    return PMPI_Reduce_local(inbuf, inoutbuf, count, datatype, op);
 }
 
 int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
@@ -81,3 +82,4 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, const int recv
     }
     return PMPI_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm, request);
 }
+#endif

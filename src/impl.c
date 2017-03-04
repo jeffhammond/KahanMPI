@@ -1,3 +1,4 @@
+/* The Intel compiler enables unsafe floating-point optimizations by default... */
 #ifdef __INTEL_COMPILER
 #pragma float_control (precise, on)
 #endif
@@ -11,12 +12,6 @@
 #include <mpi.h>
 
 #include "kahanmpi.h"
-//#include "kahansum.h"
-
-int KahanMPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
-{
-    return MPI_ERR_INTERN;
-}
 
 /* if root<0, the semantic is allreduce */
 int KahanMPI_Reduce(const void *sendbuf, void *recvbuf, int count,
@@ -223,6 +218,8 @@ int KahanMPI_Reduce(const void *sendbuf, void *recvbuf, int count,
     return MPI_ERR_INTERN;
 }
 
+#if 0
+
 int KahanMPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
                             MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
@@ -258,3 +255,10 @@ int KahanMPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, const int
 {
     return MPI_ERR_INTERN;
 }
+
+int KahanMPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
+{
+    return MPI_ERR_INTERN;
+}
+
+#endif
