@@ -14,8 +14,8 @@
 #include "kahanmpi.h"
 
 /* if root<0, the semantic is allreduce */
-int KahanMPI_Reduce(const void *sendbuf, void *recvbuf, int count,
-                    MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm)
+int KahanMPI_Reduce_gather_compensated(const void *sendbuf, void *recvbuf, int count,
+                                       MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm)
 {
     int rc = MPI_SUCCESS;
 
@@ -220,43 +220,43 @@ int KahanMPI_Reduce(const void *sendbuf, void *recvbuf, int count,
 
 #if 0
 
-int KahanMPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
-                            MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+int KahanMPI_Reduce_scatter_gather_compensated(const void *sendbuf, void *recvbuf, const int recvcounts[],
+                                   MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     return MPI_ERR_INTERN;
 }
 
-int KahanMPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf, const int recvcount,
-                                  MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+int KahanMPI_Reduce_scatter_block_gather_compensated(const void *sendbuf, void *recvbuf, const int recvcount,
+                                         MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     return MPI_ERR_INTERN;
 }
 
-int KahanMPI_Ireduce(const void *sendbuf, void *recvbuf, int count,
-                     MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm, MPI_Request * request)
+int KahanMPI_Ireduce_gather_compensated(const void *sendbuf, void *recvbuf, int count,
+                            MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm, MPI_Request * request)
 {
     return MPI_ERR_INTERN;
 }
 
-int KahanMPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
-                        MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request * request)
+int KahanMPI_Iallreduce_gather_compensated(const void *sendbuf, void *recvbuf, int count,
+                               MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request * request)
 {
     return MPI_ERR_INTERN;
 }
 
-int KahanMPI_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
-                             MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request * request)
+int KahanMPI_Ireduce_scatter_gather_compensated(const void *sendbuf, void *recvbuf, const int recvcounts[],
+                                    MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request * request)
 {
     return MPI_ERR_INTERN;
 }
 
-int KahanMPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, const int recvcount,
-                                   MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request * request)
+int KahanMPI_Ireduce_scatter_block_gather_compensated(const void *sendbuf, void *recvbuf, const int recvcount,
+                                          MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request * request)
 {
     return MPI_ERR_INTERN;
 }
 
-int KahanMPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
+int KahanMPI_Reduce_local_gather_compensated(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
 {
     return MPI_ERR_INTERN;
 }
