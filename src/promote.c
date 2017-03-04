@@ -17,12 +17,14 @@
 
 #include "kahanmpi.h"
 
-#define KAHANMPI_COPY(intype, count, in, out)   \
-do {                                            \
-    size_t n = (size_t)count;                   \
-    for (size_t i=0; i<n; ++i) {                \
-        out[i] = (intype)in[i];                 \
-    }                                           \
+#define KAHANMPI_COPY(intype, outtype, count, in, out)      \
+do {                                                        \
+    size_t n = (size_t)count;                               \
+    intype  * pin  = (intype*)in;                           \
+    outtype * pout = (outtype*)out;                         \
+    for (size_t i=0; i<n; ++i) {                            \
+        pout[i] = (intype)pin[i];                           \
+    }                                                       \
 } while(0)
 
 /* if root<0, the semantic is allreduce */
@@ -50,12 +52,12 @@ int KahanMPI_Reduce_promote(const void *sendbuf, void *recvbuf, int count,
         rc = MPI_Alloc_mem(bytes, MPI_INFO_NULL, &out);
         if (rc != MPI_SUCCESS) return rc;
 
-        KAHANMPI_COPY(float, count, sendbuf, in);
+        KAHANMPI_COPY(float, double, count, sendbuf, in);
 
         rc = PMPI_Reduce(in, out, count, MPI_DOUBLE, op, root, comm);
         if (rc != MPI_SUCCESS) return rc;
 
-        KAHANMPI_COPY(double, count, out, recvbuf);
+        KAHANMPI_COPY(double, float, count, out, recvbuf);
 
         rc = MPI_Free_mem(out);
         if (rc != MPI_SUCCESS) return rc;
