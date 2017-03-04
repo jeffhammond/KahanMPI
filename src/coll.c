@@ -6,7 +6,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count,
                MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm)
 {
     if (kahanmpi_type_op_supported(datatype, op)) {
-        return KahanMPI_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm);
+        return KahanMPI_Reduce_gather_compensated(sendbuf, recvbuf, count, datatype, op, root, comm);
     }
     return PMPI_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm);
 }
@@ -15,7 +15,7 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
                MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     if (kahanmpi_type_op_supported(datatype, op)) {
-        return KahanMPI_Reduce(sendbuf, recvbuf, count, datatype, op, -1, comm);
+        return KahanMPI_Reduce_gather_compensated(sendbuf, recvbuf, count, datatype, op, -1, comm);
     }
     return PMPI_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
 }
