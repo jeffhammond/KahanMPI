@@ -114,9 +114,6 @@ PAC_CC_FUNCTION_NAME_SYMBOL
    #AC_DEFINE(ERROR_CHECKING,1,[Define if error checking is enabled])
 #fi
 
-## Check if __VA_ARGS__ is defined by the compiler
-#PAC_C_MACRO_VA_ARGS
-
 ## const and restrict
 AC_C_CONST
 AC_C_RESTRICT
@@ -127,8 +124,9 @@ if test "$ac_cv_prog_cc_c99" = "no" ; then
    AC_ERROR([C99 not supported by the compiler])
 fi
 
-AC_CHECK_HEADERS([stdbool.h stdint.h float.h quadmath.h])
-AC_TYPE_UINT8_T
+AC_CHECK_HEADERS([stdbool.h stdint.h float.h])
+
+ACX_QUADRUPLE_PRECISION
 
 ## Debugging support
 AC_ARG_ENABLE(g, AC_HELP_STRING([--enable-g],[Enable Debugging]),
@@ -141,14 +139,14 @@ if test "$debug" = "yes"; then
 fi
 
 ## Safety checks
-AC_ARG_ENABLE(safety-checks, AC_HELP_STRING([--disable-safety-checks],[Disable safety checks for better performance]),
-                 [ safety_enabled=$enableval ],
-                 [ safety_enabled=yes ])
-AC_MSG_CHECKING(whether safety checks are enabled)
-AC_MSG_RESULT($safety_enabled)
-if test "$safety_enabled" = "no"; then
-   AC_DEFINE(NO_SEATBELTS,1,[Defined when safety checks are disabled])
-fi
+#AC_ARG_ENABLE(safety-checks, AC_HELP_STRING([--disable-safety-checks],[Disable safety checks for better performance]),
+#                 [ safety_enabled=$enableval ],
+#                 [ safety_enabled=yes ])
+#AC_MSG_CHECKING(whether safety checks are enabled)
+#AC_MSG_RESULT($safety_enabled)
+#if test "$safety_enabled" = "no"; then
+#   AC_DEFINE(NO_SEATBELTS,1,[Defined when safety checks are disabled])
+#fi
 
 ## Documentation
 AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)
