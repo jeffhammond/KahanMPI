@@ -18,13 +18,15 @@ if test ! -z "$MPICC" ; then
 fi
 PAC_PUSH_FLAG(CFLAGS)
 AC_PROG_CC(mpicc)
+AC_PROG_CXX(mpicxx)
 AM_PROG_CC_C_O
 
 # automake 1.12 seems to require this, but automake 1.11 doesn't recognize it
 # must come before LT_INIT
 m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
 
-LT_INIT(disable-shared)
+LT_INIT(disable-static)
+
 PAC_POP_FLAG(CFLAGS)
 
 ## Non-verbose make
@@ -92,7 +94,7 @@ AC_SUBST(KAHANMPI_VERSION)
 AC_CONFIG_HEADER(src/kahanmpiconf.h)
 AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
- *  (C) 2014 by Jeff Hammond.
+ *  (C) 2014-2017 by Jeff Hammond.
  *      See LICENSE in top-level directory.
  */
 #ifndef _KAHANMPICONF_H_
@@ -113,19 +115,19 @@ PAC_CC_FUNCTION_NAME_SYMBOL
 #fi
 
 ## Check if __VA_ARGS__ is defined by the compiler
-PAC_C_MACRO_VA_ARGS
+#PAC_C_MACRO_VA_ARGS
 
 ## const and restrict
 AC_C_CONST
 AC_C_RESTRICT
 
-## Chcek for C99
+## Check for C99
 AC_PROG_CC_C99
 if test "$ac_cv_prog_cc_c99" = "no" ; then
    AC_ERROR([C99 not supported by the compiler])
 fi
 
-AC_CHECK_HEADERS([execinfo.h stdint.h inttypes.h])
+AC_CHECK_HEADERS([stdbool.h stdint.h float.h quadmath.h])
 AC_TYPE_UINT8_T
 
 ## Debugging support
