@@ -10,6 +10,7 @@ lib_LTLIBRARIES = libkahanmpi.la
 noinst_LTLIBRARIES = libkahanmpii.la
 
 libkahanmpi_la_SOURCES = src/coll.c \
+                         src/initthread.c \
 			 src/gather_and_compensated.c \
 			 src/promote.c \
 			 src/utils.c
@@ -20,6 +21,7 @@ libkahanmpii_la_SOURCES = $(libkahanmpi_la_SOURCES)
 libkahanmpii_la_LDFLAGS = $(libkahanmpi_abi_version)
 
 include_HEADERS = src/kahanmpi.h
+noinst_HEADERS = src/utils.h
 
 bin_PROGRAMS =
 check_PROGRAMS = 
