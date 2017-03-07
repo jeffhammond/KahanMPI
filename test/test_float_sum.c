@@ -72,8 +72,8 @@ int main(int argc, char ** argv)
     fflush(stdout); MPI_Barrier(MPI_COMM_WORLD);
 
     if (me == 0) {
-        for (int i=0; i<n; ++i) printf("%d: %d %e %e %e\n", me, i, out1[i], out2[i], out3[i]);
-        for (int i=0; i<n; ++i) printf("%d: %d %e %e %e\n", me, i, out1[i]-out2[i], out2[i]-out3[i], out1[i]-out3[i]);
+        for (int i=0; i<n; ++i) printf("%d: RESULT %d %e %e %e\n", me, i, out1[i], out2[i], out3[i]);
+        for (int i=0; i<n; ++i) printf("%d: ERRORS %d %e %e %e\n", me, i, out1[i]-out2[i], out2[i]-out3[i], out1[i]-out3[i]);
     }
 
     fflush(stdout); MPI_Barrier(MPI_COMM_WORLD);
