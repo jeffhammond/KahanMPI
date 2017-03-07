@@ -15,6 +15,8 @@
 
 #include "kahanmpi.h"
 
+#include "state.h"
+
 #define KAHANMPI_COPY(intype, outtype, count, in, out)      \
 do {                                                        \
     size_t n = (size_t)count;                               \

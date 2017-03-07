@@ -148,6 +148,32 @@ fi
 #   AC_DEFINE(NO_SEATBELTS,1,[Defined when safety checks are disabled])
 #fi
 
+# Allow user to disable certain implementations at compile-time.
+AC_ARG_ENABLE(safety-checks, AC_HELP_STRING([--disable-gather-compensated],[Disable the gather-compensated implementation.]),
+                 [ gather_compensated_enabled=$enableval ],
+                 [ gather_compensated_enabled=yes ])
+AC_MSG_CHECKING(whether gather-compensated is enabled)
+AC_MSG_RESULT($gather_compensated_enabled)
+if test "$gather_compensated_enabled" = "no"; then
+   AC_DEFINE(DISABLE_USE_GATHER_COMPENSATED,1,[Defined when gather-compensated is disabled])
+fi
+AC_ARG_ENABLE(safety-checks, AC_HELP_STRING([--disable-userdef-compensated],[Disable the userdef-compensated implementation.]),
+                 [ userdef_compensated_enabled=$enableval ],
+                 [ userdef_compensated_enabled=yes ])
+AC_MSG_CHECKING(whether userdef-compensated is enabled)
+AC_MSG_RESULT($userdef_compensated_enabled)
+if test "$userdef_compensated_enabled" = "no"; then
+   AC_DEFINE(DISABLE_USE_USERDEF_COMPENSATED,1,[Defined when userdef-compensated is disabled])
+fi
+AC_ARG_ENABLE(safety-checks, AC_HELP_STRING([--disable-type-promotion],[Disable the type-promotion implementation.]),
+                 [ promotion_enabled=$enableval ],
+                 [ promotion_enabled=yes ])
+AC_MSG_CHECKING(whether type-promotion is enabled)
+AC_MSG_RESULT($promotion_enabled)
+if test "$promotion_enabled" = "no"; then
+   AC_DEFINE(DISABLE_USE_PROMOTION,1,[Defined when type-promotion is disabled])
+fi
+
 ## Documentation
 AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)
 AC_SUBST(DOXYGEN)
