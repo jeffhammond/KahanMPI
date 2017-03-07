@@ -9,11 +9,9 @@
 
 #include <math.h>
 
-#if HAVE_LIBQUADMATH
-#include <quadmath.h>
-#endif
-
 #include <mpi.h>
+
+#include "myquad.h"
 
 #include "kahanmpi.h"
 
@@ -70,10 +68,10 @@ int KahanMPI_Reduce_promote(const void *sendbuf, void *recvbuf, int count,
 #if HAVE_LIBQUADMATH
     else if (datatype == MPI_DOUBLE) {
 
-        __float128 * in;
-        __float128 * out;
+        quad * in;
+        quad * out;
 
-        MPI_Aint bytes = (MPI_Aint)sizeof(__float128) * (MPI_Aint)count;
+        MPI_Aint bytes = (MPI_Aint)sizeof(quad) * (MPI_Aint)count;
         rc = MPI_Alloc_mem(bytes, MPI_INFO_NULL, &in);
         if (rc != MPI_SUCCESS) return rc;
         rc = MPI_Alloc_mem(bytes, MPI_INFO_NULL, &out);
@@ -84,7 +82,7 @@ int KahanMPI_Reduce_promote(const void *sendbuf, void *recvbuf, int count,
         rc = PMPI_Reduce(in, out, count, MPI_FLOAT128, op128, root, comm);
         if (rc != MPI_SUCCESS) return rc;
 
-        KAHANMPI_COPY(__float128, count, out, recvbuf);
+        KAHANMPI_COPY(quad, count, out, recvbuf);
 
         rc = MPI_Free_mem(out);
         if (rc != MPI_SUCCESS) return rc;
@@ -95,10 +93,10 @@ int KahanMPI_Reduce_promote(const void *sendbuf, void *recvbuf, int count,
 
     } else if (datatype == MPI_LONG_DOUBLE) {
 
-        __float128 * in;
-        __float128 * out;
+        quad * in;
+        quad * out;
 
-        MPI_Aint bytes = (MPI_Aint)sizeof(__float128) * (MPI_Aint)count;
+        MPI_Aint bytes = (MPI_Aint)sizeof(quad) * (MPI_Aint)count;
         rc = MPI_Alloc_mem(bytes, MPI_INFO_NULL, &in);
         if (rc != MPI_SUCCESS) return rc;
         rc = MPI_Alloc_mem(bytes, MPI_INFO_NULL, &out);
@@ -109,7 +107,7 @@ int KahanMPI_Reduce_promote(const void *sendbuf, void *recvbuf, int count,
         rc = PMPI_Reduce(in, out, count, MPI_FLOAT128, op128, root, comm);
         if (rc != MPI_SUCCESS) return rc;
 
-        KAHANMPI_COPY(__float128, count, out, recvbuf);
+        KAHANMPI_COPY(quad, count, out, recvbuf);
 
         rc = MPI_Free_mem(out);
         if (rc != MPI_SUCCESS) return rc;
