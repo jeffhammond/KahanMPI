@@ -65,7 +65,7 @@ int KahanMPI_Reduce_promote(const void *sendbuf, void *recvbuf, int count,
         return MPI_SUCCESS;
 
     }
-#if HAVE_LIBQUADMATH
+#if HAVE_QUAD_TYPE
     else if (datatype == MPI_DOUBLE) {
 
         quad * in;
@@ -79,7 +79,7 @@ int KahanMPI_Reduce_promote(const void *sendbuf, void *recvbuf, int count,
 
         KAHANMPI_COPY(double, count, sendbuf, in);
 
-        rc = PMPI_Reduce(in, out, count, MPI_FLOAT128, op128, root, comm);
+        rc = PMPI_Reduce(in, out, count, kahanmpi_quad, kahanmpi_op, root, comm);
         if (rc != MPI_SUCCESS) return rc;
 
         KAHANMPI_COPY(quad, count, out, recvbuf);
@@ -104,7 +104,7 @@ int KahanMPI_Reduce_promote(const void *sendbuf, void *recvbuf, int count,
 
         KAHANMPI_COPY(long double, count, sendbuf, in);
 
-        rc = PMPI_Reduce(in, out, count, MPI_FLOAT128, op128, root, comm);
+        rc = PMPI_Reduce(in, out, count, kahanmpi_quad, kahanmpi_op, root, comm);
         if (rc != MPI_SUCCESS) return rc;
 
         KAHANMPI_COPY(quad, count, out, recvbuf);
