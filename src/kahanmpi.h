@@ -1,4 +1,4 @@
-#include <stdbool.h>
+#include "mybool.h"
 
 #include <mpi.h>
 

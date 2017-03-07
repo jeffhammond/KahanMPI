@@ -1,4 +1,4 @@
-#include <stdbool.h>
+#include "mybool.h"
 
 typedef struct {
     bool use_gather_compensated;
