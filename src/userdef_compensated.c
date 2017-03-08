@@ -15,207 +15,61 @@
 
 #include "state.h"
 
-/* if root<0, the semantic is allreduce */
+void KahanMPI_Reduce_compensated(void * in, void * out, int * count, MPI_Datatype * type)
+{
+    if (*count % 2 != 0) {
+        printf("count cannot be odd (%d)\n", *count);
+        PMPI_Abort(MPI_COMM_WORLD, 1);
+    }
+    int n = (*count)/2;
+
+    if (*type == MPI_FLOAT) {
+        const float * restrict fin  = (const float*)in;
+              float * restrict fout = (float*)out;
+
+        for (int i=0; i<n; ++i) {
+            /* simple summation:
+             * fout[i] += fin[i]; */
+            float y   = fin[i] - fin[i+n];
+            float t   = fout[i] + y;
+            fout[i+n] = (t - fin[i]) - y;
+            fout[i]   = t;
+        }
+    }
+
+    return;
+}
+
 int KahanMPI_Reduce_userdef_compensated(const void *sendbuf, void *recvbuf, int count,
                                        MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm)
 {
     int rc = MPI_SUCCESS;
 
     int typesize = 0;
-    rc = MPI_Type_size(datatype, &typesize);
+    rc = PMPI_Type_size(datatype, &typesize);
     if (rc != MPI_SUCCESS) return rc;
 
-    int commsize = 1;
-    rc = MPI_Comm_size(comm, &commsize);
+    /* We cannot use a user-defined type here because MPI_User_function only takes one datatype argument
+     * and there is no reasonable way to ensure the displacement between {send,recv}buf and {send,recv}aux
+     * is the same.  Thus, we have to copy in and out of temporaries that are 2x what would otherwise be necessary. */
+
+    MPI_Aint bytes = (MPI_Aint)typesize * (MPI_Aint)count * (MPI_Aint)2;
+
+    void * in;
+    void * out;
+
+    rc = PMPI_Alloc_mem(bytes, MPI_INFO_NULL, &in);
     if (rc != MPI_SUCCESS) return rc;
 
-    int commrank = 0;
-    rc = MPI_Comm_rank(comm, &commrank);
+    rc = PMPI_Alloc_mem(bytes, MPI_INFO_NULL, &out);
     if (rc != MPI_SUCCESS) return rc;
 
-    if (datatype == MPI_FLOAT) {
+    memcpy(in, sendbuf, count*typesize);
+    memset(&(in[count]), 0, count*typesize);
 
-        /* only used at root */
-        float * gatherbuf;
-        float * reducebuf;
+    /* DO IT */
 
-        /* allocate buffer for summation only at root */
-        if (commrank==abs(root)) {
-            MPI_Aint bytes;
-
-            bytes = (MPI_Aint)typesize * (MPI_Aint)count * (MPI_Aint)commsize;
-            rc = MPI_Alloc_mem(bytes, MPI_INFO_NULL, &gatherbuf);
-            if (rc != MPI_SUCCESS) return rc;
-
-            bytes = (MPI_Aint)typesize * (MPI_Aint)count;
-            rc = MPI_Alloc_mem(bytes, MPI_INFO_NULL, &reducebuf);
-            if (rc != MPI_SUCCESS) return rc;
-        }
-
-        /* gather all inputs to root */
-        rc = MPI_Gather(sendbuf, count, datatype, gatherbuf, count, datatype, abs(root), comm);
-        if (rc != MPI_SUCCESS) return rc;
-
-        /* perform summation only at root */
-        if (commrank==abs(root)) {
-            fflush(stdout);
-            for (int j=0; j<count; ++j) {
-                float sum = 0.0f;
-                float low = 0.0f;
-                for (int i=0; i<commsize; ++i) {
-                    int index = j+i*count;
-                    /* simple summation:
-                     * sum += gatherbuf[index]; */
-                    float y = gatherbuf[index] - low;
-                    float t = sum + y;
-                    low = (t - sum) - y;
-                    sum = t;
-                }
-                reducebuf[j] = sum;
-            }
-            //fflush(stdout);
-            memcpy(recvbuf, reducebuf, count * sizeof(float) );
-        }
-
-        /* bcast to achieve allreduce semantic */
-        if (root<0) {
-            rc = MPI_Bcast(recvbuf, count, datatype, abs(root), comm);
-            if (rc != MPI_SUCCESS) return rc;
-        }
-
-        /* free buffer for summation only at root */
-        if (commrank==abs(root)) {
-            rc = MPI_Free_mem(gatherbuf);
-            if (rc != MPI_SUCCESS) return rc;
-
-            rc = MPI_Free_mem(reducebuf);
-            if (rc != MPI_SUCCESS) return rc;
-        }
-
-        return MPI_SUCCESS;
-
-    } else if (datatype == MPI_DOUBLE) {
-
-        /* only used at root */
-        double * gatherbuf;
-        double * reducebuf;
-
-        /* allocate buffer for summation only at root */
-        if (commrank==abs(root)) {
-            MPI_Aint bytes;
-
-            bytes = (MPI_Aint)typesize * (MPI_Aint)count * (MPI_Aint)commsize;
-            rc = MPI_Alloc_mem(bytes, MPI_INFO_NULL, &gatherbuf);
-            if (rc != MPI_SUCCESS) return rc;
-
-            bytes = (MPI_Aint)typesize * (MPI_Aint)count;
-            rc = MPI_Alloc_mem(bytes, MPI_INFO_NULL, &reducebuf);
-            if (rc != MPI_SUCCESS) return rc;
-        }
-
-        /* gather all inputs to root */
-        rc = MPI_Gather(sendbuf, count, datatype, gatherbuf, count, datatype, abs(root), comm);
-        if (rc != MPI_SUCCESS) return rc;
-
-        /* perform summation only at root */
-        if (commrank==abs(root)) {
-            fflush(stdout);
-            for (int j=0; j<count; ++j) {
-                double sum = 0.0;
-                double low = 0.0;
-                for (int i=0; i<commsize; ++i) {
-                    int index = j+i*count;
-                    /* simple summation:
-                     * sum += gatherbuf[index]; */
-                    double y = gatherbuf[index] - low;
-                    double t = sum + y;
-                    low = (t - sum) - y;
-                    sum = t;
-                }
-                reducebuf[j] = sum;
-            }
-            memcpy(recvbuf, reducebuf, count * sizeof(double) );
-        }
-
-        /* bcast to achieve allreduce semantic */
-        if (root<0) {
-            rc = MPI_Bcast(recvbuf, count, datatype, abs(root), comm);
-            if (rc != MPI_SUCCESS) return rc;
-        }
-
-        /* free buffer for summation only at root */
-        if (commrank==abs(root)) {
-            rc = MPI_Free_mem(gatherbuf);
-            if (rc != MPI_SUCCESS) return rc;
-
-            rc = MPI_Free_mem(reducebuf);
-            if (rc != MPI_SUCCESS) return rc;
-        }
-
-        return MPI_SUCCESS;
-
-    } else if (datatype == MPI_LONG_DOUBLE) {
-
-        /* only used at root */
-        long double * gatherbuf;
-        long double * reducebuf;
-
-        /* allocate buffer for summation only at root */
-        if (commrank==abs(root)) {
-            MPI_Aint bytes;
-
-            bytes = (MPI_Aint)typesize * (MPI_Aint)count * (MPI_Aint)commsize;
-            rc = MPI_Alloc_mem(bytes, MPI_INFO_NULL, &gatherbuf);
-            if (rc != MPI_SUCCESS) return rc;
-
-            bytes = (MPI_Aint)typesize * (MPI_Aint)count;
-            rc = MPI_Alloc_mem(bytes, MPI_INFO_NULL, &reducebuf);
-            if (rc != MPI_SUCCESS) return rc;
-        }
-
-        /* gather all inputs to root */
-        rc = MPI_Gather(sendbuf, count, datatype, gatherbuf, count, datatype, abs(root), comm);
-        if (rc != MPI_SUCCESS) return rc;
-
-        /* perform summation only at root */
-        if (commrank==abs(root)) {
-            fflush(stdout);
-            for (int j=0; j<count; ++j) {
-                long double sum = 0.0L;
-                long double low = 0.0L;
-                for (int i=0; i<commsize; ++i) {
-                    int index = j+i*count;
-                    /* simple summation:
-                     * sum += gatherbuf[index]; */
-                    long double y = gatherbuf[index] - low;
-                    long double t = sum + y;
-                    low = (t - sum) - y;
-                    sum = t;
-                }
-                reducebuf[j] = sum;
-            }
-            //fflush(stdout);
-            memcpy(recvbuf, reducebuf, count * sizeof(long double) );
-        }
-
-        /* bcast to achieve allreduce semantic */
-        if (root<0) {
-            rc = MPI_Bcast(recvbuf, count, datatype, abs(root), comm);
-            if (rc != MPI_SUCCESS) return rc;
-        }
-
-        /* free buffer for summation only at root */
-        if (commrank==abs(root)) {
-            rc = MPI_Free_mem(gatherbuf);
-            if (rc != MPI_SUCCESS) return rc;
-
-            rc = MPI_Free_mem(reducebuf);
-            if (rc != MPI_SUCCESS) return rc;
-        }
-
-        return MPI_SUCCESS;
-
-    }
+    memcpy(recvbuf, out, count*typesize);
 
     return MPI_ERR_INTERN;
 }
