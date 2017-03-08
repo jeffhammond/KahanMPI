@@ -56,7 +56,6 @@ int KahanMPI_Reduce_gather_compensated(const void *sendbuf, void *recvbuf, int c
 
         /* perform summation only at root */
         if (commrank==abs(root)) {
-            fflush(stdout);
             for (int j=0; j<count; ++j) {
                 float sum = 0.0f;
                 float low = 0.0f;
@@ -71,7 +70,6 @@ int KahanMPI_Reduce_gather_compensated(const void *sendbuf, void *recvbuf, int c
                 }
                 reducebuf[j] = sum;
             }
-            //fflush(stdout);
             memcpy(recvbuf, reducebuf, count * sizeof(float) );
         }
 
@@ -117,7 +115,6 @@ int KahanMPI_Reduce_gather_compensated(const void *sendbuf, void *recvbuf, int c
 
         /* perform summation only at root */
         if (commrank==abs(root)) {
-            fflush(stdout);
             for (int j=0; j<count; ++j) {
                 double sum = 0.0;
                 double low = 0.0;
@@ -177,7 +174,6 @@ int KahanMPI_Reduce_gather_compensated(const void *sendbuf, void *recvbuf, int c
 
         /* perform summation only at root */
         if (commrank==abs(root)) {
-            fflush(stdout);
             for (int j=0; j<count; ++j) {
                 long double sum = 0.0L;
                 long double low = 0.0L;
@@ -192,7 +188,6 @@ int KahanMPI_Reduce_gather_compensated(const void *sendbuf, void *recvbuf, int c
                 }
                 reducebuf[j] = sum;
             }
-            //fflush(stdout);
             memcpy(recvbuf, reducebuf, count * sizeof(long double) );
         }
 
