@@ -59,15 +59,15 @@ int main(int argc, char ** argv)
 
     fflush(stdout); MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_Allreduce(in1, out1, n, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Reduce(in1, out1, n, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 
     fflush(stdout); MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_Allreduce(in2, out2, n, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Reduce(in2, out2, n, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 
     fflush(stdout); MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_Allreduce(in3, out3, n, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Reduce(in3, out3, n, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 
     fflush(stdout); MPI_Barrier(MPI_COMM_WORLD);
 
