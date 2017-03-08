@@ -30,36 +30,48 @@ void KahanMPI_Compensated_sum(void * in, void * out, int * count, MPI_Datatype *
               float * restrict fout = (float*)out;
 
         for (int i=0; i<n; ++i) {
-            /* simple summation:
-             * fout[i] += fin[i]; */
+#if 1
+            fout[i]   += fin[i];
+            fout[i+n]  = 0;
+#else
+            /* THIS IS WRONG */
             float y   = fin[i] - fin[i+n];
             float t   = fout[i] + y;
             fout[i+n] = (t - fin[i]) - y;
             fout[i]   = t;
+#endif
         }
     } else if (*type == MPI_DOUBLE) {
         const double * restrict fin  = (const double*)in;
               double * restrict fout = (double*)out;
 
         for (int i=0; i<n; ++i) {
-            /* simple summation:
-             * fout[i] += fin[i]; */
+#if 1
+            fout[i]   += fin[i];
+            fout[i+n]  = 0;
+#else
+            /* THIS IS WRONG */
             double y   = fin[i] - fin[i+n];
             double t   = fout[i] + y;
             fout[i+n] = (t - fin[i]) - y;
             fout[i]   = t;
+#endif
         }
     } else if (*type == MPI_LONG_DOUBLE) {
         const long double * restrict fin  = (const long double*)in;
               long double * restrict fout = (long double*)out;
 
         for (int i=0; i<n; ++i) {
-            /* simple summation:
-             * fout[i] += fin[i]; */
+#if 1
+            fout[i]   += fin[i];
+            fout[i+n]  = 0;
+#else
+            /* THIS IS WRONG */
             long double y   = fin[i] - fin[i+n];
             long double t   = fout[i] + y;
             fout[i+n] = (t - fin[i]) - y;
             fout[i]   = t;
+#endif
         }
     }
 }
