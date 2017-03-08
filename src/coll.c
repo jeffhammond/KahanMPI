@@ -10,20 +10,20 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count,
     if (KahanMPI_Global_State.active) {
 #ifndef DISABLE_USE_GATHER_COMPENSATED
         if (KahanMPI_Global_State.use_gather_compensated) {
-           int rc = KahanMPI_Reduce_gather_compensated(sendbuf, recvbuf, count, datatype, op, root, comm);
-           if (rc == MPI_SUCCESS) return rc;
+            int rc = KahanMPI_Reduce_gather_compensated(sendbuf, recvbuf, count, datatype, op, root, comm);
+            if (rc == MPI_SUCCESS) return rc;
         }
 #endif
 #ifndef DISABLE_USE_USERDEF_COMPENSATED
         if (KahanMPI_Global_State.use_userdef_compensated) {
-           int rc = KahanMPI_Reduce_userdef_compensated(sendbuf, recvbuf, count, datatype, op, root, comm);
-           if (rc == MPI_SUCCESS) return rc;
+            int rc = KahanMPI_Reduce_userdef_compensated(sendbuf, recvbuf, count, datatype, op, root, comm);
+            if (rc == MPI_SUCCESS) return rc;
         }
 #endif
 #ifndef DISABLE_USE_PROMOTION
         if (KahanMPI_Global_State.use_promotion) {
-           int rc = KahanMPI_Reduce_promote(sendbuf, recvbuf, count, datatype, op, root, comm);
-           if (rc == MPI_SUCCESS) return rc;
+            int rc = KahanMPI_Reduce_promote(sendbuf, recvbuf, count, datatype, op, root, comm);
+            if (rc == MPI_SUCCESS) return rc;
         }
 #endif
     }
