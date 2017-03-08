@@ -1,16 +1,7 @@
-#include "mybool.h"
+#ifndef HAVE_KAHANMPI_H
+#define HAVE_KAHANMPI_H
 
 #include <mpi.h>
-
-static inline bool kahanmpi_type_op_supported(MPI_Datatype type, MPI_Op op)
-{
-    if (op == MPI_SUM) {
-        if (type == MPI_FLOAT) return true;
-        if (type == MPI_DOUBLE) return true;
-        if (type == MPI_LONG_DOUBLE) return true;
-    }
-    return false;
-}
 
 void KahanMPI_Init(void);
 
@@ -75,3 +66,4 @@ int KahanMPI_Ireduce_scatter_block_promote(const void *sendbuf, void *recvbuf, c
 int KahanMPI_Reduce_local_promote(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op);
 #endif
 
+#endif // HAVE_KAHANMPI_H
