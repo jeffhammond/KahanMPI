@@ -32,6 +32,7 @@ void KahanMPI_Init(void)
         KahanMPI_Global_State.use_promotion           = use_promotion;
         KahanMPI_Global_State.mpi_errors_are_fatal    = mpi_errors_are_fatal;
         KahanMPI_Global_State.debug_level             = debug_level;
+        KahanMPI_Global_State.mpi_world_rank          = rank;
 
         int size;
         PMPI_Comm_size(MPI_COMM_WORLD, &size);
