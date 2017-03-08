@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h> /* INT_MAX */
 #include <string.h>
 
 #include <math.h>
@@ -15,7 +16,7 @@
 
 #include "state.h"
 
-void KahanMPI_Reduce_compensated(void * in, void * out, int * count, MPI_Datatype * type)
+void KahanMPI_Compensated_sum(void * in, void * out, int * count, MPI_Datatype * type)
 {
     if (*count % 2 != 0) {
         printf("count cannot be odd (%d)\n", *count);
@@ -35,15 +36,56 @@ void KahanMPI_Reduce_compensated(void * in, void * out, int * count, MPI_Datatyp
             fout[i+n] = (t - fin[i]) - y;
             fout[i]   = t;
         }
+    } else if (*type == MPI_DOUBLE) {
+        const double * restrict fin  = (const double*)in;
+              double * restrict fout = (double*)out;
+
+        for (int i=0; i<n; ++i) {
+            /* simple summation:
+             * fout[i] += fin[i]; */
+            double y   = fin[i] - fin[i+n];
+            double t   = fout[i] + y;
+            fout[i+n] = (t - fin[i]) - y;
+            fout[i]   = t;
+        }
+    } else if (*type == MPI_LONG_DOUBLE) {
+        const long double * restrict fin  = (const long double*)in;
+              long double * restrict fout = (long double*)out;
+
+        for (int i=0; i<n; ++i) {
+            /* simple summation:
+             * fout[i] += fin[i]; */
+            long double y   = fin[i] - fin[i+n];
+            long double t   = fout[i] + y;
+            fout[i+n] = (t - fin[i]) - y;
+            fout[i]   = t;
+        }
     }
 
     return;
 }
 
+/* TODO Create and save the Kahan summation MPI_Op during initialization */
+
 int KahanMPI_Reduce_userdef_compensated(const void *sendbuf, void *recvbuf, int count,
                                        MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm)
 {
     int rc = MPI_SUCCESS;
+
+    /* SUM is the only operation supported. */
+    if (op != MPI_SUM) return MPI_ERR_INTERN;
+
+    /* See KahanMPI_Compensated_sum for supported types. */
+    if ( (datatype != MPI_FLOAT) ||
+         (datatype != MPI_DOUBLE) ||
+         (datatype != MPI_LONG_DOUBLE) ) return MPI_ERR_INTERN;
+
+    /* If 2*count > INT_MAX, we will encounter overflow.
+     * We can fix this later with BigMPI techniques... */
+    if (count > (INT_MAX/2)) {
+        printf("count %d is too large - will overflow)\n", count);
+        PMPI_Abort(MPI_COMM_WORLD, 1);
+    }
 
     int typesize = 0;
     rc = PMPI_Type_size(datatype, &typesize);
@@ -64,12 +106,36 @@ int KahanMPI_Reduce_userdef_compensated(const void *sendbuf, void *recvbuf, int 
     rc = PMPI_Alloc_mem(bytes, MPI_INFO_NULL, &out);
     if (rc != MPI_SUCCESS) return rc;
 
+    /* Copy sendbuf to the first half of buffer */
     memcpy(in, sendbuf, count*typesize);
-    memset(&(in[count]), 0, count*typesize);
+    /* Initialize the second half of buffer to (positive) zero */
+    memset(&(in[(count+1)*typesize]), 0, count*typesize);
 
-    /* DO IT */
+    /* Create the user-defined datatype */
 
+    MPI_User_function * kahansum = KahanMPI_Compensated_sum;
+
+    MPI_Op kahan_op;
+    rc = PMPI_Op_create(kahansum, 1 /* commutative */, &kahan_op);
+    if (rc != MPI_SUCCESS) return rc;
+
+    /* Perform the reduction */
+
+    rc = PMPI_Reduce(in, out, 2*count, datatype, kahan_op, root, comm);
+    if (rc != MPI_SUCCESS) return rc;
+
+    /* Copy the output back to the user buffer */
     memcpy(recvbuf, out, count*typesize);
+
+    /* Cleanup all the temporary stuff */
+    rc = PMPI_Op_free(&kahan_op);
+    if (rc != MPI_SUCCESS) return rc;
+
+    rc = PMPI_Free_mem(in);
+    if (rc != MPI_SUCCESS) return rc;
+
+    rc= PMPI_Free_mem(out);
+    if (rc != MPI_SUCCESS) return rc;
 
     return MPI_ERR_INTERN;
 }
