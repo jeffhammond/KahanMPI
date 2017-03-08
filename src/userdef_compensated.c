@@ -5,23 +5,24 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h> /* INT_MAX */
 #include <string.h>
 
 #include <math.h>
+#include <limits.h> /* INT_MAX */
 
 #include <mpi.h>
 
 #include "kahanmpi.h"
 
 #include "state.h"
+#include "debug.h"
 
 void KahanMPI_Compensated_sum(void * in, void * out, int * count, MPI_Datatype * type)
 {
     if (*count % 2 != 0) {
-        printf("count cannot be odd (%d)\n", *count);
-        PMPI_Abort(MPI_COMM_WORLD, 1);
+        KahanMPI_Error("count cannot be odd (%d)\n", *count);
     }
+
     int n = (*count)/2;
 
     if (*type == MPI_FLOAT) {
@@ -61,8 +62,6 @@ void KahanMPI_Compensated_sum(void * in, void * out, int * count, MPI_Datatype *
             fout[i]   = t;
         }
     }
-
-    return;
 }
 
 /* TODO Create and save the Kahan summation MPI_Op during initialization */
@@ -70,26 +69,28 @@ void KahanMPI_Compensated_sum(void * in, void * out, int * count, MPI_Datatype *
 int KahanMPI_Reduce_userdef_compensated(const void *sendbuf, void *recvbuf, int count,
                                        MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm)
 {
-    int rc = MPI_SUCCESS;
-
     /* SUM is the only operation supported. */
-    if (op != MPI_SUM) return MPI_ERR_INTERN;
+    if (op != MPI_SUM) {
+        KahanMPI_Warning("Only MPI_SUM is supported!\n");
+        return MPI_ERR_INTERN;
+    }
 
     /* See KahanMPI_Compensated_sum for supported types. */
-    if ( (datatype != MPI_FLOAT) ||
-         (datatype != MPI_DOUBLE) ||
-         (datatype != MPI_LONG_DOUBLE) ) return MPI_ERR_INTERN;
+    if ( (datatype != MPI_FLOAT) &&
+         (datatype != MPI_DOUBLE) &&
+         (datatype != MPI_LONG_DOUBLE) ) {
+        KahanMPI_Warning("Unsupported datatype (%zu) requested!\n", (size_t)datatype);
+        return MPI_ERR_INTERN;
+    }
 
     /* If 2*count > INT_MAX, we will encounter overflow.
      * We can fix this later with BigMPI techniques... */
     if (count > (INT_MAX/2)) {
-        printf("count %d is too large - will overflow)\n", count);
-        PMPI_Abort(MPI_COMM_WORLD, 1);
+        KahanMPI_Error("count %d is too large - will overflow)\n", count);
     }
 
     int typesize = 0;
-    rc = PMPI_Type_size(datatype, &typesize);
-    if (rc != MPI_SUCCESS) return rc;
+    PMPI_Type_size(datatype, &typesize);
 
     /* We cannot use a user-defined type here because MPI_User_function only takes one datatype argument
      * and there is no reasonable way to ensure the displacement between {send,recv}buf and {send,recv}aux
@@ -100,11 +101,8 @@ int KahanMPI_Reduce_userdef_compensated(const void *sendbuf, void *recvbuf, int 
     void * in;
     void * out;
 
-    rc = PMPI_Alloc_mem(bytes, MPI_INFO_NULL, &in);
-    if (rc != MPI_SUCCESS) return rc;
-
-    rc = PMPI_Alloc_mem(bytes, MPI_INFO_NULL, &out);
-    if (rc != MPI_SUCCESS) return rc;
+    PMPI_Alloc_mem(bytes, MPI_INFO_NULL, &in);
+    PMPI_Alloc_mem(bytes, MPI_INFO_NULL, &out);
 
     /* Copy sendbuf to the first half of buffer */
     memcpy(in, sendbuf, count*typesize);
@@ -116,28 +114,21 @@ int KahanMPI_Reduce_userdef_compensated(const void *sendbuf, void *recvbuf, int 
     MPI_User_function * kahansum = KahanMPI_Compensated_sum;
 
     MPI_Op kahan_op;
-    rc = PMPI_Op_create(kahansum, 1 /* commutative */, &kahan_op);
-    if (rc != MPI_SUCCESS) return rc;
+    PMPI_Op_create(kahansum, 1 /* commutative */, &kahan_op);
 
     /* Perform the reduction */
 
-    rc = PMPI_Reduce(in, out, 2*count, datatype, kahan_op, root, comm);
-    if (rc != MPI_SUCCESS) return rc;
+    PMPI_Reduce(in, out, 2*count, datatype, kahan_op, root, comm);
 
     /* Copy the output back to the user buffer */
     memcpy(recvbuf, out, count*typesize);
 
     /* Cleanup all the temporary stuff */
-    rc = PMPI_Op_free(&kahan_op);
-    if (rc != MPI_SUCCESS) return rc;
+    PMPI_Op_free(&kahan_op);
+    PMPI_Free_mem(in);
+    PMPI_Free_mem(out);
 
-    rc = PMPI_Free_mem(in);
-    if (rc != MPI_SUCCESS) return rc;
-
-    rc= PMPI_Free_mem(out);
-    if (rc != MPI_SUCCESS) return rc;
-
-    return MPI_ERR_INTERN;
+    return MPI_SUCCESS;
 }
 
 #if 0
