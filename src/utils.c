@@ -47,18 +47,3 @@ long KahanMPI_Getenv_long(const char *varname, long default_value)
   if (var) return atoi(var);
   return default_value;
 }
-
-/* Print a debugging message. */
-void KahanMPI_Debug_print_impl(const char *func, const char *format, ...)
-{
-    va_list etc;
-    int  disp = 0;
-    char string[500];
-
-    disp += snprintf(string, 500, "[%d] %s: ", KahanMPI_Global_State.mpi_world_rank, func);
-    va_start(etc, format);
-    disp += vsnprintf(string+disp, 500-disp, format, etc);
-    va_end(etc);
-
-    fprintf(stderr, "%s", string);
-}

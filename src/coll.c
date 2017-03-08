@@ -3,11 +3,13 @@
 #include "kahanmpi.h"
 
 #include "state.h"
+#include "debug.h"
 
 int MPI_Reduce(const void *sendbuf, void *recvbuf, int count,
                MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm)
 {
     if (KahanMPI_Global_State.active) {
+        KahanMPI_Warning("KahanMPI is active\n");
 #ifndef DISABLE_USE_GATHER_COMPENSATED
         if (KahanMPI_Global_State.use_gather_compensated) {
             int rc = KahanMPI_Reduce_gather_compensated(sendbuf, recvbuf, count, datatype, op, root, comm);
