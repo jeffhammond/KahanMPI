@@ -114,6 +114,9 @@ PAC_CC_FUNCTION_NAME_SYMBOL
    #AC_DEFINE(ERROR_CHECKING,1,[Define if error checking is enabled])
 #fi
 
+## Check if __VA_ARGS__ is defined by the compiler
+PAC_C_MACRO_VA_ARGS
+
 ## const and restrict
 AC_C_CONST
 AC_C_RESTRICT
