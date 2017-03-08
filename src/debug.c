@@ -96,3 +96,22 @@ void KahanMPI_Warning(const char *fmt, ...)
   fprintf(stderr, "%s", string);
   fflush(NULL);
 }
+
+void KahanMPI_Error_impl(const char *file, const int line, const char *func, const char *msg, ...)
+{
+  va_list ap;
+  int disp = 0;
+  char string[500];
+
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  va_start(ap, msg);
+  disp += vsnprintf(string, 500, msg, ap);
+  va_end(ap);
+
+  fprintf(stderr, "[%d] KahanMPI Internal error in %s (%s:%d)\n[%d] Message: %s\n", rank,
+  func, file, line, rank, string);
+  MPI_Abort(MPI_COMM_WORLD, 100);
+}
+
