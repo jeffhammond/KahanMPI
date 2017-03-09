@@ -30,15 +30,17 @@ void KahanMPI_Compensated_sum(void * in, void * out, int * count, MPI_Datatype *
               float * restrict fout = (float*)out;
 
         for (int i=0; i<n; ++i) {
-#if 1
+#if 0
             fout[i]   += fin[i];
             fout[i+n]  = 0;
 #else
-            /* THIS IS WRONG */
             float y   = fin[i] - fin[i+n];
             float t   = fout[i] + y;
             fout[i+n] = (t - fin[i]) - y;
             fout[i]   = t;
+            //printf("%d: i=%d fin[i]=%e fin[i+n]=%e fout[i]=%e fout[i+n]=%e\n",
+            //        KahanMPI_Global_State.mpi_world_rank, i, fin[i], fin[i+n], fout[i], fout[i+n]);
+            //fflush(stdout);
 #endif
         }
     } else if (*type == MPI_DOUBLE) {
@@ -46,13 +48,12 @@ void KahanMPI_Compensated_sum(void * in, void * out, int * count, MPI_Datatype *
               double * restrict fout = (double*)out;
 
         for (int i=0; i<n; ++i) {
-#if 1
+#if 0
             fout[i]   += fin[i];
             fout[i+n]  = 0;
 #else
-            /* THIS IS WRONG */
-            double y   = fin[i] - fin[i+n];
-            double t   = fout[i] + y;
+            double y  = fin[i] - fin[i+n];
+            double t  = fout[i] + y;
             fout[i+n] = (t - fin[i]) - y;
             fout[i]   = t;
 #endif
@@ -62,15 +63,14 @@ void KahanMPI_Compensated_sum(void * in, void * out, int * count, MPI_Datatype *
               long double * restrict fout = (long double*)out;
 
         for (int i=0; i<n; ++i) {
-#if 1
+#if 0
             fout[i]   += fin[i];
             fout[i+n]  = 0;
 #else
-            /* THIS IS WRONG */
-            long double y   = fin[i] - fin[i+n];
-            long double t   = fout[i] + y;
-            fout[i+n] = (t - fin[i]) - y;
-            fout[i]   = t;
+            long double y = fin[i] - fin[i+n];
+            long double t = fout[i] + y;
+            fout[i+n]     = (t - fin[i]) - y;
+            fout[i]       = t;
 #endif
         }
     }
@@ -116,10 +116,12 @@ int KahanMPI_Reduce_userdef_compensated(const void *sendbuf, void *recvbuf, int 
     PMPI_Alloc_mem(bytes, MPI_INFO_NULL, &in);
     PMPI_Alloc_mem(bytes, MPI_INFO_NULL, &out);
 
+    /* Initialize the buffer to (positive) zero */
+    memset(in, 0, bytes);
     /* Copy sendbuf to the first half of buffer */
-    memcpy(in, sendbuf, count*typesize);
-    /* Initialize the second half of buffer to (positive) zero */
-    memset(&(in[(count+1)*typesize]), 0, count*typesize);
+    memcpy(in, sendbuf, bytes/2);
+
+    memset(out, 0, bytes);
 
     /* Create the user-defined datatype */
 
