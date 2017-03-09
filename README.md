@@ -10,3 +10,9 @@ for such purposes, including Kahan (compensated) summation.
 # Known Issues
 
 The CMake build system is broken.  Do not use it.  And by, I mean CMake.  Ever.
+
+# Disclaimer
+
+Neither Professor William Kahan nor anyone else named Kahan has endorsed
+this software.  The name reflects the fact that Kahan summation is used
+extensively.
