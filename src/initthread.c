@@ -32,7 +32,6 @@ void KahanMPI_Init(void)
         KahanMPI_Global_State.use_promotion           = use_promotion;
         KahanMPI_Global_State.mpi_errors_are_fatal    = mpi_errors_are_fatal;
         KahanMPI_Global_State.debug_level             = debug_level;
-        KahanMPI_Global_State.mpi_world_rank          = rank;
 
         int size;
         PMPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -54,6 +53,9 @@ void KahanMPI_Init(void)
 
     int rc = PMPI_Bcast(&KahanMPI_Global_State, sizeof(KahanMPI_Global_State),
                         MPI_BYTE, root, MPI_COMM_WORLD);
+
+    KahanMPI_Global_State.mpi_world_rank = rank;
+
     if (rc != MPI_SUCCESS) {
         printf("%d: KahanMPI_Init: PMPI_Bcast failed\n", rank);
         PMPI_Abort(MPI_COMM_WORLD, rc);
