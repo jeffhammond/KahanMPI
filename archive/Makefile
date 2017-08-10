@@ -8,7 +8,7 @@ CCFLAGS  = -g -O2 -std=c11 -DDEBUG=$(DEBUG)
 CLIBS    =
 
 CXX      = clang++
-CXXFLAGS = -g -O2 -std=c++11 -stdlib=libc++ -DDEBUG=$(DEBUG)
+CXXFLAGS = -g -O2 -std=c++11 -stdlib=libc++ -DDEBUG=$(DEBUG) -Rpass-analysis
 CXXLIBS  = -nodefaultlibs -lc++ -lc++abi -lm -lc
 
 LD       = $(CC)
@@ -23,9 +23,6 @@ all: $(TESTS)
 
 %.cc.o: %.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-#basic: basic.c.o
-#	$(CC) $(CFLAGS) $< $(CLIBS) -o $@
 
 %: %.c.o
 	$(CC) $(CFLAGS) $< $(CLIBS) -o $@

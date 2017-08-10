@@ -35,6 +35,7 @@ T KahanSumSIMD(size_t n, T * input)
 
     T sum[4] = {0};
     T c[4]   = {0};
+    _Pragma("clang loop vectorize(enable)")
     for (auto i=0; i<n; i+=4) {
         T y[4];
         T t[4];
