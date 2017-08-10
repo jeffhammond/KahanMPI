@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cmath>    /* declares ldexp() */
 #include <iostream>
 #include <new>      /* declares new[]   */
@@ -26,9 +27,34 @@ T KahanSum(size_t n, T * input)
     return sum;
 }
 
+/* Adapted from http://en.wikipedia.org/wiki/Kahan_summation_algorithm */
+template <class T>
+T KahanSumSIMD(size_t n, T * input)
+{
+    assert(n%2==0);
+
+    T sum[2] = {0};
+    T c[2]   = {0};             // A running compensation for lost low-order bits.
+    for (auto i=0; i<n; i+=2) {
+        T y[2];
+        T t[2];
+        // 0
+        y[0] = input[i] - c[0];         // So far, so good: c is zero.
+        t[0] = sum[0] + y[0];           // Alas, sum is big, y small, so low-order digits of y are lost.
+        c[0] = (t[0] - sum[0]) - y[0];  // (t - sum) recovers the high-order part of y; subtracting y recovers -(low part of y)
+        sum[0] = t[0];                  // Algebraically, c should always be zero. Beware overly-aggressive optimising compilers!
+        // 1
+        y[1] = input[i+1] - c[1];       // So far, so good: c is zero.
+        t[1] = sum[1] + y[1];           // Alas, sum is big, y small, so low-order digits of y are lost.
+        c[1] = (t[1] - sum[1]) - y[1];  // (t - sum) recovers the high-order part of y; subtracting y recovers -(low part of y)
+        sum[1] = t[1];                  // Algebraically, c should always be zero. Beware overly-aggressive optimising compilers!
+    }                            // Next time around, the lost low part will be added to y in a fresh attempt.
+    return sum[0] + sum[1];
+}
+
 int main(int argc, char * argv[])
 {
-    size_t n = 6;
+    size_t n = 8;
 
     printf("Testing KahanSum for n=%zu\n", n);
 
