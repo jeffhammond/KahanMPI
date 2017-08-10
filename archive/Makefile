@@ -3,12 +3,16 @@
 
 DEBUG	 = 0
 
-CC       = clang
+LLVM_PATH = /usr/local/Cellar/llvm/4.0.1/bin/
+
+CC       = ${LLVM_PATH}clang
 CCFLAGS  = -g -O2 -std=c11 -DDEBUG=$(DEBUG)
 CLIBS    =
 
-CXX      = clang++
-CXXFLAGS = -g -O2 -std=c++11 -stdlib=libc++ -DDEBUG=$(DEBUG) -Rpass-analysis
+CXX      = ${LLVM_PATH}clang++
+CXXFLAGS = -g -Os -std=c++11 -stdlib=libc++ -DDEBUG=$(DEBUG)
+CXXFLAGS += -Rpass-analysis=loop-vectorize -Rpass=loop-vectorize
+CXXFLAGS += -march=x86-64 #-mcpu=haswell #-mattr=+avx2
 CXXLIBS  = -nodefaultlibs -lc++ -lc++abi -lm -lc
 
 LD       = $(CC)
